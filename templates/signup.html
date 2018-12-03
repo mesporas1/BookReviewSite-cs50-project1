@@ -1,1 +1,28 @@
-tsetetets
+{% extends "layout.html" %}
+
+{% block title %}
+    Welcome!
+{% endblock %}
+
+{% block body %}
+    <h1>Welcome to the Matter's Book Review Site!</h1>
+    
+    <h2> Please signup below</h2>
+
+    <form action="{{ url_for('success') }}" method="post">      
+            
+                    <div class="form-group">
+                      <label for="exampleInputEmail1">Username</label>
+                      <input type="username" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Create username" name="username">
+                    </div>
+                    <div class="form-group">
+                      <label for="exampleInputPassword1">Password</label>
+                      <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Create password" name="password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign Up</button>
+    </form>
+
+</form>
+    
+
+{% endblock %}

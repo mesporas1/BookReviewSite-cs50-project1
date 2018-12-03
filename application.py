@@ -27,8 +27,43 @@ def index():
 
 @app.route("/signup")
 def signup():
+    #Sign up for a username and password
+    # Get username and password
     return render_template("signup.html")
+
+@app.route("/success", methods=["POST"])
+def success():
+    #Display a successful username and password
+
+    # Get username and password
+    username = request.form.get("username")
+    password = request.form.get("password")
+   
+    # Make sure username and password exist.
+    if db.execute("SELECT * FROM users WHERE username = :username",{"username": username}).rowcount > 0:
+        return render_template("error.html", message = "Username exists")
+    else:
+        db.execute("INSERT INTO users (username, password) VALUES (:username, :password)",{"username":username, "password":password})
+        db.commit()
+        return render_template("success.html")
+    
+    
 
 @app.route("/login", methods=["POST"])
 def login():
-    return "Login!"
+    # Get username and password
+    username = request.form.get("username")
+    password = request.form.get("password")
+    
+    # Make sure username and password exist
+    if db.execute("SELECT * FROM users WHERE username = :username AND password = :password",{"username": username, "password": password}).rowcount == 0:
+        return render_template("error.html", message = "No such username and password exists")
+    else:
+        return render_template("books.html", user = username)
+
+
+#@app.route("/books")
+#def books():
+#    """Lists all flights."""
+#    books = db.execute("SELECT * FROM books").fetchall()
+#    return render_template("flights.html", flights=flights)
