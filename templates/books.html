@@ -1,14 +1,30 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Welcome!
+    Flights
 {% endblock %}
 
 {% block body %}
-    <h1>Please select a book {{ user }}!!</h1>
-    
-    
-   
-    
+    <h1>All Flights</h1>
+    <h2>{{isbn}}</h2>
+    <h2>{{title}}</h2>
+    <h2>{{author}}</h2>
+    <table>
+        <tr>
+            <th>Book ID</th>
+            <th>Book ISBN</th>
+            <th>Book Title</th>
+            <th>Book Author</th>
+        </tr>
+        {% for book in books %}
+            <tr>
+                <th>{{ book.id }}</th>
+                <th>{{ book.isbn }}</th>
+                <th>{{ book.author }}</th>
+                <th>{{ book.title }}</th>
+            </tr>
+        {% endfor %}
+        </table>
 
+        
 {% endblock %}
