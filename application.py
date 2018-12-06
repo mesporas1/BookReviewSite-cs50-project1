@@ -1,4 +1,4 @@
-import os
+import os, requests
 
 from flask import Flask, session, render_template, request
 from flask_session import Session
@@ -19,6 +19,8 @@ Session(app)
 # Set up database
 engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
+
+# Keep track of user
 
 
 @app.route("/")
@@ -54,11 +56,12 @@ def search():
     # Get username and password
     username = request.form.get("username")
     password = request.form.get("password")
-    
+
     # Make sure username and password exist
     if db.execute("SELECT * FROM users WHERE username = :username AND password = :password",{"username": username, "password": password}).rowcount == 0:
         return render_template("error.html", message = "No such username and password exists")
     else:
+        session["user"] = username
         return render_template("search.html", user = username)
 
 @app.route("/search/results", methods=["POST"])
@@ -67,7 +70,8 @@ def books():
     isbn = request.form.get("isbn")
     title = request.form.get("title")
     author = request.form.get("author")
-    
+    username = session["user"]
+
     if isbn != "":
         isbn = "%" + request.form.get("isbn") + "%"
     if title != "":
@@ -79,9 +83,14 @@ def books():
     books = db.execute("SELECT * FROM books WHERE isbn LIKE :isbn OR title LIKE :title OR author LIKE :author", {"isbn": isbn, "title":title, "author":author}).fetchall()
     if books is None:
         return render_template("error.html", message = "No books")
-    return render_template("books.html", books = books, isbn = isbn, title = title, author = author)
+    return render_template("books.html", books = books, isbn = isbn, title = title, author = author, username = username)
 
-    #books = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchall()
-    #if books is None:
-    #    return render_template("error.html", message = "No books")
-    #return render_template("books.html", books = books)
+@app.route("/book/<int:book_id>")
+def book(book_id):
+    """List review of single book"""
+    book = db.execute("SELECT * FROM books where book_id = :book_id", book_id).fetchone()
+    res = requests.get("https://www.goodreads.com/book/reviews_count.json", params={"key": os.getenv("gr-key"), "isbn" : book.isbn})
+    print(os.getenv("gr-key"))
+    print(res.json)
+
+    return render_template("book.html")

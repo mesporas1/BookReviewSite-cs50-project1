@@ -1,14 +1,12 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Flights
+    Books
 {% endblock %}
 
 {% block body %}
-    <h1>All Flights</h1>
-    <h2>{{isbn}}</h2>
-    <h2>{{title}}</h2>
-    <h2>{{author}}</h2>
+    <h1>Here are your search results, {{username}}</h1>
+    
     <table>
         <tr>
             <th>Book ID</th>
@@ -17,11 +15,11 @@
             <th>Book Author</th>
         </tr>
         {% for book in books %}
-            <tr>
-                <th>{{ book.id }}</th>
+            <tr class = 'clickable-row' data-href=>
+                <th><a href = "{{ url_for('book', book_id= book.id)}}"> {{ book.id }}</a></th>
                 <th>{{ book.isbn }}</th>
-                <th>{{ book.author }}</th>
                 <th>{{ book.title }}</th>
+                <th>{{ book.author }}</th>
             </tr>
         {% endfor %}
         </table>
