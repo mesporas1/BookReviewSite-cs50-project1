@@ -85,12 +85,14 @@ def books():
         return render_template("error.html", message = "No books")
     return render_template("books.html", books = books, isbn = isbn, title = title, author = author, username = username)
 
-@app.route("/book/<int:book_id>")
+@app.route("/book/<int:book_id>", methods=["POST"])
 def book(book_id):
     """List review of single book"""
-    book = db.execute("SELECT * FROM books where book_id = :book_id", book_id).fetchone()
-    res = requests.get("https://www.goodreads.com/book/reviews_count.json", params={"key": os.getenv("gr-key"), "isbn" : book.isbn})
-    print(os.getenv("gr-key"))
-    print(res.json)
+    book_id = request.form.get("book_id")
+    print(request.form.get("book_id"))
+    #book = db.execute("SELECT * FROM books where book_id = :book_id", book_id).fetchone()
+    #res = requests.get("https://www.goodreads.com/book/reviews_count.json", params={"key": os.getenv("gr-key"), "isbn" : book.isbn})
+    #print(os.getenv("gr-key"))
+    #print(res.json)
 
-    return render_template("book.html")
+    return render_template("book.html", book_id = book_id)
