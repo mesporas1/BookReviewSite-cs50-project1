@@ -1,6 +1,6 @@
 import os, requests
 
-from flask import Flask, session, render_template, request
+from flask import Flask, session, render_template, request, jsonify
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -90,9 +90,37 @@ def book(book_id):
     """List review of single book"""
     book_id = request.form.get("book_id")
     print(request.form.get("book_id"))
-    #book = db.execute("SELECT * FROM books where book_id = :book_id", book_id).fetchone()
-    #res = requests.get("https://www.goodreads.com/book/reviews_count.json", params={"key": os.getenv("gr-key"), "isbn" : book.isbn})
-    #print(os.getenv("gr-key"))
-    #print(res.json)
+    book = db.execute("SELECT * FROM books where id = :book_id", {"book_id":book_id}).fetchone()
+    print(book)
+    res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": os.getenv("gr-key"), "isbns" : book.isbn})
+    print(res)
+    #Stores results of requests into data file. Format is one list that contains a dictionary of the review counts
+    data = res.json()
+    #Returns the average rating from data of the received book_id
+    avg_rate= data["books"][0]["average_rating"]
+    
 
-    return render_template("book.html", book_id = book_id)
+    return render_template("book.html", book_id = book_id, book=book, data=data, avg_rate=avg_rate)
+    #return render_template("book.html", book_id = book_id, book=book, data=data)
+
+@app.route("/api/<string:isbn>")
+def isbn_api(isbn):
+    """Return details about a single book."""
+
+    # Make sure book exists.
+    book = db.execute("SELECT * FROM books where isbn = :isbn", {"isbn": isbn}).fetchone()
+    if book is None:
+        return jsonify({"error": "Invalid isbn"}), 404
+
+    # Get all books isbn information
+    res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": os.getenv("gr-key"), "isbns" : book.isbn})
+    data = res.json()
+    avg_rate= data["books"][0]["average_rating"]
+
+    return jsonify({
+            "title": book.isbn,
+            "author": book.author,
+            "year": book.year,
+            "isbn": book.isbn,
+            "average_score": avg_rate
+            })
