@@ -124,3 +124,9 @@ def isbn_api(isbn):
             "isbn": book.isbn,
             "average_score": avg_rate
             })
+
+@app.route("/review/<int:book_id>", methods=["POST"])
+def review(book_id):
+    book_id = request.form.get("book_id")
+    book = db.execute("SELECT * FROM books where id = :book_id", {"book_id":book_id}).fetchone()
+    return render_template("review.html", book=book)

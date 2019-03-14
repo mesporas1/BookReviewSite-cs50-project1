@@ -6,15 +6,12 @@
 
 {% block body %}
     <h1>All books</h1>
-    <h2>{{book_title}}</h2>
+    <h2>{{book.title}}</h2>
     <h3>{{data}}</h3>
     <h2>{{book.isbn}}</h2> 
     <h2>{{avg_rate}}</h2>
 
-    
-    <form action="{{ url_for('review', book_id= book.id)}}" method="post">
-        <button type="submit" name="book_id" value= {{book.id}} >Review book</button>
-      </form>
+    <a href="{{url_for('review')}}">Submit review for book</a>
     <h1>Reviews</h1>
     </div>
 
