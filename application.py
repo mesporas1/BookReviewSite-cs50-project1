@@ -89,18 +89,9 @@ def books():
 def book(book_id):
     """List review of single book"""
     book_id = request.form.get("book_id")
-    print(request.form.get("book_id"))
     book = db.execute("SELECT * FROM books where id = :book_id", {"book_id":book_id}).fetchone()
-    print(book)
-    res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": os.getenv("gr-key"), "isbns" : book.isbn})
-    print(res)
-    #Stores results of requests into data file. Format is one list that contains a dictionary of the review counts
-    data = res.json()
-    #Returns the average rating from data of the received book_id
-    avg_rate= data["books"][0]["average_rating"]
-    
-
-    return render_template("book.html", book_id = book_id, book=book, data=data, avg_rate=avg_rate)
+    avg_rate = getAvgRev(book.id)
+    return render_template("book.html", book_id = book_id, book=book)
     #return render_template("book.html", book_id = book_id, book=book, data=data)
 
 @app.route("/api/<string:isbn>")
@@ -129,4 +120,26 @@ def isbn_api(isbn):
 def review(book_id):
     book_id = request.form.get("book_id")
     book = db.execute("SELECT * FROM books where id = :book_id", {"book_id":book_id}).fetchone()
-    return render_template("review.html", book=book)
+    avg_rate = getAvgRev(book.isbn)
+    user = session["user"]
+    return render_template("review.html", book_id=book_id, book=book, avg_rate = avg_rate, user = user)
+
+
+@app.route("/submitReviewSuccessful/<int:book_id>", methods =["POST"])
+def submitReviewSuccessful(book_id):
+    book_id = book_id
+    book = db.execute("SELECT * FROM books where id = :book_id", {"book_id":book_id}).fetchone()
+    rating = request.form.get("rating")
+    review = request.form.get("review")
+    user_id = db.execute("SELECT id FROM USERS where username = :username", {"username":session["user"]})
+    #db.execute("INSERT INTO reviews (username, password) VALUES (:username, :password)",{"username":username, "password":password})
+    return render_template("submitReviewSuccessful.html", book=book,review = review, rating = rating, user_id = user_id)
+
+#Gets the average review of a book from goodreads api
+def getAvgRev(isbn):
+    res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": os.getenv("gr-key"), "isbns": isbn})
+    #Stores results of requests into data file. Format is one list that contains a dictionary of the review counts
+    data = res.json()
+    #Returns the average rating from data of the received book_id
+    avg_rate= data["books"][0]["average_rating"]
+    return avg_rate

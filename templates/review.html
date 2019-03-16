@@ -1,19 +1,24 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Flights
+    Books
 {% endblock %}
 
 {% block body %}
-    <h1>All books</h1>
-    <h2>{{book.title}}</h2>
-    <h3>{{data}}</h3>
-    <h2>{{book.isbn}}</h2> 
-    <h2>{{avg_rate}}</h2>
-
-    <a href="{{url_for('review')}}">Submit review for book</a>
-    <h1>Reviews</h1>
-    </div>
+    <h2>Hello {{user}}! Write a review for {{book.title}} below:</h2>
+    <form action="{{url_for('submitReviewSuccessful', book_id = book.id)}}" method ="post">
+        <textarea name="review" rows="10" cols="30" placeholder = "I think that the book was ..."></textarea>
+        <br>
+        <h3>How would you rate it from 1 to 5?</h3>
+        <input type="radio" name="rating" value="1"> 1<br>
+        <input type="radio" name="rating" value="2"> 2<br>
+        <input type="radio" name="rating" value="3"> 3<br>  
+        <input type="radio" name="rating" value="4"> 4<br>
+        <input type="radio" name="rating" value="5"> 5<br>  
+        <input type="submit">
+      </form>
+      <h1>{{book_id}}</h1>
+      <h1>{{book.id}}</h1>
 
 
 {% endblock %}

@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Success!
+{% endblock %}
+
+{% block body %}
+    <h1>Success! Below is your review</h1>
+    <p>{{review}}</p>
+    <h2>You gave it a {{rating}} out of 5</h2>
+
+
+
+    <form action="{{ url_for('book', book_id= book.id)}}" method="post">
+        <button type="submit" name="book_id" value= {{book.id}} >Go back to the book</button>
+      </form>
+
+
+
+{% endblock %}
