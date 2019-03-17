@@ -90,7 +90,8 @@ def book(book_id):
     """List review of single book"""
     book_id = request.form.get("book_id")
     book = db.execute("SELECT * FROM books where id = :book_id", {"book_id":book_id}).fetchone()
-    avg_rate = getAvgRev(book.id)
+    avg_rate = getAvgRev(book.isbn)
+    
     return render_template("book.html", book_id = book_id, book=book)
     #return render_template("book.html", book_id = book_id, book=book, data=data)
 
@@ -103,17 +104,12 @@ def isbn_api(isbn):
     if book is None:
         return jsonify({"error": "Invalid isbn"}), 404
 
-    # Get all books isbn information
-    res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": os.getenv("gr-key"), "isbns" : book.isbn})
-    data = res.json()
-    avg_rate= data["books"][0]["average_rating"]
-
     return jsonify({
             "title": book.isbn,
             "author": book.author,
             "year": book.year,
             "isbn": book.isbn,
-            "average_score": avg_rate
+            "average_score": getAvgRev(book.isbn)
             })
 
 @app.route("/review/<int:book_id>", methods=["POST"])
@@ -131,9 +127,19 @@ def submitReviewSuccessful(book_id):
     book = db.execute("SELECT * FROM books where id = :book_id", {"book_id":book_id}).fetchone()
     rating = request.form.get("rating")
     review = request.form.get("review")
-    user_id = db.execute("SELECT id FROM USERS where username = :username", {"username":session["user"]})
-    #db.execute("INSERT INTO reviews (username, password) VALUES (:username, :password)",{"username":username, "password":password})
-    return render_template("submitReviewSuccessful.html", book=book,review = review, rating = rating, user_id = user_id)
+    user = db.execute("SELECT * FROM USERS where username = :username", {"username":session["user"]}).fetchone()
+   
+    # Check if review exists.
+    if db.execute("SELECT * FROM reviews WHERE user_id = :user_id AND book_id = :book_id",{"user_id": user.id, "book_id":book.id}).rowcount > 0:
+        return render_template("error.html", message = "Review exists")
+    else:
+        db.execute("INSERT INTO reviews (review_score, user_id, user_review, book_id) VALUES (:review, :user_id, :user_review, :book_id)",{"review":rating, "user_id":user.id, "user_review":review, "book_id":book.id})
+        db.commit()
+        return render_template("success.html")
+    
+    
+    
+    return render_template("submitReviewSuccessful.html", book=book,review = review, rating = rating, user_id = user.id)
 
 #Gets the average review of a book from goodreads api
 def getAvgRev(isbn):
