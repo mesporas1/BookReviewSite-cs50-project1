@@ -92,7 +92,12 @@ def book(book_id):
     book = db.execute("SELECT * FROM books where id = :book_id", {"book_id":book_id}).fetchone()
     avg_rate = getAvgRev(book.isbn)
     
-    return render_template("book.html", book_id = book_id, book=book)
+    reviews = db.execute("SELECT user_review, users.username from reviews inner join users on users.id = reviews.user_id where book_id = :book_id",{"book_id":book_id})
+    print(reviews)
+    if reviews.rowcount > 0:
+        return render_template("book.html", book_id = book_id, book=book, reviews=reviews)
+    else:
+        return render_template("book.html", book_id = book_id, book=book, reviews = {})
     #return render_template("book.html", book_id = book_id, book=book, data=data)
 
 @app.route("/api/<string:isbn>")
