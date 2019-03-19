@@ -92,7 +92,7 @@ def book(book_id):
     book = db.execute("SELECT * FROM books where id = :book_id", {"book_id":book_id}).fetchone()
     avg_rate = getAvgRev(book.isbn)
     
-    reviews = db.execute("SELECT user_review, users.username from reviews inner join users on users.id = reviews.user_id where book_id = :book_id",{"book_id":book_id})
+    reviews = db.execute("SELECT user_review, users.username, review_score from reviews inner join users on users.id = reviews.user_id where book_id = :book_id",{"book_id":book_id})
     print(reviews)
     if reviews.rowcount > 0:
         return render_template("book.html", book_id = book_id, book=book, reviews=reviews)
@@ -136,11 +136,13 @@ def submitReviewSuccessful(book_id):
    
     # Check if review exists.
     if db.execute("SELECT * FROM reviews WHERE user_id = :user_id AND book_id = :book_id",{"user_id": user.id, "book_id":book.id}).rowcount > 0:
-        return render_template("error.html", message = "Review exists")
-    else:
-        db.execute("INSERT INTO reviews (review_score, user_id, user_review, book_id) VALUES (:review, :user_id, :user_review, :book_id)",{"review":rating, "user_id":user.id, "user_review":review, "book_id":book.id})
+        db.execute("UPDATE reviews SET review_score = :review_score, user_review = :user_review WHERE user_id = :user_id AND book_id = :book_id",{"review_score":rating, "user_review":review, "user_id":user.id, "book_id":book.id, })
         db.commit()
-        return render_template("success.html")
+        return render_template("submitReviewSuccessful.html", review = review, rating = rating, book = book, message = "Here is your updated review")
+    else:
+        db.execute("INSERT INTO reviews (review_score, user_id, user_review, book_id) VALUES (:review_score, :user_id, :user_review, :book_id)",{"review_score":rating, "user_id":user.id, "user_review":review, "book_id":book.id})
+        db.commit()
+        return render_template("submitReviewSuccessful.html", review = review, rating = rating, book = book, message = "Success")
     
     
     
