@@ -91,13 +91,13 @@ def book(book_id):
     book_id = request.form.get("book_id")
     book = db.execute("SELECT * FROM books where id = :book_id", {"book_id":book_id}).fetchone()
     avg_rate = getAvgRev(book.isbn)
-    
+    rev_count = getGRRevCount(book.isbn)
     reviews = db.execute("SELECT user_review, users.username, review_score from reviews inner join users on users.id = reviews.user_id where book_id = :book_id",{"book_id":book_id})
     print(reviews)
     if reviews.rowcount > 0:
-        return render_template("book.html", book_id = book_id, book=book, reviews=reviews)
+        return render_template("book.html", book_id = book_id, book=book, reviews=reviews, avg_rate=avg_rate, rev_count=rev_count)
     else:
-        return render_template("book.html", book_id = book_id, book=book, reviews = {})
+        return render_template("book.html", book_id = book_id, book=book, reviews = {}, avg_rate=avg_rate, rev_count=rev_count)
     #return render_template("book.html", book_id = book_id, book=book, data=data)
 
 @app.route("/api/<string:isbn>")
@@ -106,6 +106,7 @@ def isbn_api(isbn):
 
     # Make sure book exists.
     book = db.execute("SELECT * FROM books where isbn = :isbn", {"isbn": isbn}).fetchone()
+    rev_count = db.execute("SELECT * FROM reviews where book_id = :book_id", {"book_id": book.id}).rowcount()
     if book is None:
         return jsonify({"error": "Invalid isbn"}), 404
 
@@ -114,6 +115,7 @@ def isbn_api(isbn):
             "author": book.author,
             "year": book.year,
             "isbn": book.isbn,
+            "review_count": rev_count,
             "average_score": getAvgRev(book.isbn)
             })
 
@@ -156,3 +158,11 @@ def getAvgRev(isbn):
     #Returns the average rating from data of the received book_id
     avg_rate= data["books"][0]["average_rating"]
     return avg_rate
+
+def getGRRevCount(isbn):
+    res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": os.getenv("gr-key"), "isbns": isbn})
+    #Stores results of requests into data file. Format is one list that contains a dictionary of the review counts
+    data = res.json()
+    #Returns the average rating from data of the received book_id
+    rev_count= data["books"][0]["reviews_count"]
+    return rev_count
